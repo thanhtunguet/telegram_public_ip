@@ -7,6 +7,7 @@ on:
 env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  IMAGE: telegram-public-ip
 
 jobs:
   build-and-push:
@@ -30,4 +31,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ env.DOCKER_USERNAME }}/my-docker-image:latest
+          tags: ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE }}:latest
