@@ -1,0 +1,19 @@
+{
+  "name": "public-ip-checker",
+  "version": "1.0.0",
+  "description": "Public IP Telegram Bot",
+  "main": "index.js",
+  "repository": "https://github.com/thanhtunguet/public-ip-checker",
+  "author": "thanhtunguet <thanhtung.uet@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "axios": "^1.3.4",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "telegraf": "^4.12.2"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
+}
