@@ -1,6 +1,7 @@
 const express = require('express');
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
+const moment = require('moment');
 
 if (process.env.NODE_ENV === 'development') {
     require('dotenv').config();
@@ -20,6 +21,8 @@ bot.help((ctx) => {
 })
 
 bot.command('/ip', async (ctx) => {
+    const m = moment();
+    console.log(`Receive IP request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
     const response = await axios.get('https://checkip.amazonaws.com');
     ctx.reply(response.data);
 })
@@ -27,6 +30,7 @@ bot.command('/ip', async (ctx) => {
 bot.launch()
 
 app.listen(process.env.PORT || 3000, () => {
-    bot.telegram.setWebhook(`https://telegram.thanhtunguet.info/bot`);
+    const url = `https://telegram.thanhtunguet.info/bot${BOT_TOKEN}`;
+    bot.telegram.setWebhook(url);
     console.log('Bot is listening on port 3000');
 });
