@@ -9,8 +9,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const DOMAIN = "telegram.thanhtunguet.info";
-const CASH_MAC = "00:24:ee:01:4e:fe";
+const CASH_MAC = process.env.CASH_MAC;
+const DOMAIN = process.env.DOMAIN;
 
 const bot = new Telegraf(BOT_TOKEN);
 
