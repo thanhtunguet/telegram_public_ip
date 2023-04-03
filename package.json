@@ -15,6 +15,10 @@
     "telegraf": "^4.12.2"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node .",
+    "watch": "nodemon ."
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }
