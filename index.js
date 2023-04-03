@@ -29,6 +29,12 @@ bot.command('/ip', async (ctx) => {
 
 bot.launch()
 
+app.use('/bot', async (req, res) => {
+    const response = await axios.get('https://checkip.amazonaws.com');
+    bot.context.reply(response.data);
+    res.status(200).send({});
+});
+
 app.listen(process.env.PORT || 3000, () => {
     const url = `https://telegram.thanhtunguet.info/bot${BOT_TOKEN}`;
     bot.telegram.setWebhook(url);
