@@ -1,50 +1,101 @@
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
 const moment = require('moment');
-const crypto = require('crypto');
+const { createServer } = require('http');
+const dgram = require('dgram');
 
 if (process.env.NODE_ENV === 'development') {
     require('dotenv').config();
 }
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
+const DOMAIN = "telegram.thanhtunguet.info";
+const CASH_MAC = "00:24:ee:01:4e:fe";
 
 const bot = new Telegraf(BOT_TOKEN);
+
+// Enable graceful stop
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
+const helpText = `Welcome to my \`thanhtunguet_public_ip\`. This bot provides these commands below:
+
+/ip: check current IP
+
+/wol: Wake Cash machine on LAN
+`
+
+bot.start((ctx) => {
+    ctx.reply(helpText);
+});
+
+bot.help(help);
+
+bot.hears('/ip', async (ctx) => {
+    const m = moment();
+    console.log(`Receive IP request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
+    const currentIP = await getCurrentIP();
+    ctx.reply(`Your current public IP is ${currentIP}`);
+});
+
+bot.hears('/wol', async (ctx) => {
+    const m = moment();
+    console.log(`Receive WoL request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
+    wakeOnLan(CASH_MAC);
+    ctx.reply(`Sent magic packet to ${CASH_MAC}`);
+});
+
+start();
+
+// Functions
 
 async function getCurrentIP() {
     const response = await axios.get('https://checkip.amazonaws.com');
     return response.data;
 }
 
-bot.start((ctx) => {
-    ctx.reply('Welcome!')
-});
+async function start() {
+    const webhook = await bot.createWebhook({
+        domain: DOMAIN,
+    });
+    createServer(webhook).listen(3000);
+}
 
-bot.help((ctx) => {
-    ctx.reply('How can I help you?')
-});
+// Function to convert MAC address string to bytes array
+function macToBytes(mac) {
+    return mac.split(':').map(x => parseInt(x, 16));
+}
 
-bot.command('/ip', async (ctx) => {
-    const m = moment();
-    console.log(`Receive IP request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
-    const currentIP = await getCurrentIP();
-    ctx.reply(currentIP);
-});
+// Function to create WoL magic packet
+function createMagicPacket(mac) {
+    const macBytes = macToBytes(mac);
+    const packet = Buffer.alloc(102, 0xFF);
+    for (let i = 0; i < 16; i++) {
+        for (let j = 0; j < 6; j++) {
+            packet[i * 6 + j] = macBytes[j];
+        }
+    }
+    return packet;
+}
 
-bot.launch({
-    webhook: {
-        // Public domain for webhook; e.g.: example.com
-        domain: 'telegram.thanhtunguet.info',
+function wakeOnLan(macAddress) {
+    // Send WoL magic packet to broadcast address
+    const socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
-        // Port to listen on; e.g.: 8080
-        port: 3000,
+    socket.bind(9, () => {
+        socket.setBroadcast(true);
+        const packet = createMagicPacket(macAddress);
+        socket.send(packet, 0, packet.length, 9, '255.255.255.255', (err) => {
+            socket.close();
+            if (err) {
+                console.error(err);
+            } else {
+                console.log(`WoL magic packet sent successfully to MAC: ${macAddress}`);
+            }
+        });
+    });
+}
 
-        // Optional path to listen for.
-        // `bot.secretPathComponent()` will be used by default
-        hookPath: bot.secretPathComponent(),
-
-        // Optional secret to be sent back in a header for security.
-        // e.g.: `crypto.randomBytes(64).toString("hex")`
-        secretToken: crypto.randomBytes(64).toString("hex"),
-    },
-});
+function help(ctx) {
+    ctx.reply(helpText);
+}
