@@ -1,7 +1,7 @@
-const express = require('express');
 const { Telegraf } = require('telegraf');
 const axios = require('axios');
 const moment = require('moment');
+const crypto = require('crypto');
 
 if (process.env.NODE_ENV === 'development') {
     require('dotenv').config();
@@ -9,34 +9,42 @@ if (process.env.NODE_ENV === 'development') {
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-const app = express();
 const bot = new Telegraf(BOT_TOKEN);
+
+async function getCurrentIP() {
+    const response = await axios.get('https://checkip.amazonaws.com');
+    return response.data;
+}
 
 bot.start((ctx) => {
     ctx.reply('Welcome!')
-})
+});
 
 bot.help((ctx) => {
     ctx.reply('How can I help you?')
-})
+});
 
 bot.command('/ip', async (ctx) => {
     const m = moment();
     console.log(`Receive IP request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
-    const response = await axios.get('https://checkip.amazonaws.com');
-    ctx.reply(response.data);
-})
-
-bot.launch()
-
-app.use('/bot', async (req, res) => {
-    const response = await axios.get('https://checkip.amazonaws.com');
-    bot.context.reply(response.data);
-    res.status(200).send({});
+    const currentIP = await getCurrentIP();
+    ctx.reply(currentIP);
 });
 
-app.listen(process.env.PORT || 3000, () => {
-    const url = `https://telegram.thanhtunguet.info/bot${BOT_TOKEN}`;
-    bot.telegram.setWebhook(url);
-    console.log('Bot is listening on port 3000');
+bot.launch({
+    webhook: {
+        // Public domain for webhook; e.g.: example.com
+        domain: 'telegram.thanhtunguet.info',
+
+        // Port to listen on; e.g.: 8080
+        port: 3000,
+
+        // Optional path to listen for.
+        // `bot.secretPathComponent()` will be used by default
+        hookPath: bot.secretPathComponent(),
+
+        // Optional secret to be sent back in a header for security.
+        // e.g.: `crypto.randomBytes(64).toString("hex")`
+        secretToken: crypto.randomBytes(64).toString("hex"),
+    },
 });
