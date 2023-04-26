@@ -11,6 +11,7 @@ if (process.env.NODE_ENV === 'development') {
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CASH_MAC = process.env.CASH_MAC;
 const DOMAIN = process.env.DOMAIN;
+const PC_MAC = process.env.PC_MAC;
 
 const bot = new Telegraf(BOT_TOKEN);
 
@@ -23,6 +24,8 @@ const helpText = `Welcome to my \`thanhtunguet_public_ip\`. This bot provides th
 /ip: check current IP
 
 /wol: Wake Cash machine on LAN
+
+/wakepc: Wake Cash machine on LAN
 `
 
 bot.start((ctx) => {
@@ -43,6 +46,13 @@ bot.hears('/wol', async (ctx) => {
     console.log(`Receive WoL request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
     wakeOnLan(CASH_MAC);
     ctx.reply(`Sent magic packet to ${CASH_MAC}`);
+});
+
+bot.hears('/wakepc', async (ctx) => {
+    const m = moment();
+    console.log(`Receive WoL request command: ${m.format('DD-MM-YYYY HH:mm:ss')}`);
+    wakeOnLan(PC_MAC);
+    ctx.reply(`Sent magic packet to ${PC_MAC}`);
 });
 
 start();
